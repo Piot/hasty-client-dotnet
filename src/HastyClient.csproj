@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{65BD3B43-0BE0-4953-8B54-780970707CAD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Hasty</RootNamespace>
+    <AssemblyName>hasty_client</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+    <NoStdLib>false</NoStdLib>
+    <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+    <NoStdLib>false</NoStdLib>
+    <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HastyClient\Properties\AssemblyInfo.cs" />
+    <Compile Include="HastyClient\Connection\ConnectionMaintainer.cs" />
+    <Compile Include="HastyClient\Connection\Connector.cs" />
+    <Compile Include="HastyClient\Connection\ClientConnection.cs" />
+    <Compile Include="HastyClient\Model\ConnectCommand.cs" />
+    <Compile Include="HastyClient\Model\Version.cs" />
+    <Compile Include="HastyClient\Protocol\ConnectSerializer.cs" />
+    <Compile Include="HastyClient\Protocol\Commands.cs" />
+    <Compile Include="HastyClient\Protocol\VersionSerializer.cs" />
+    <Compile Include="HastyClient\Protocol\PacketCreator.cs" />
+    <Compile Include="HastyClient\Debug\OctetBufferDebug.cs" />
+    <Compile Include="HastyClient\Client\HastyClient.cs" />
+    <Compile Include="HastyClient\Client\CommandDefinitions.cs" />
+    <Compile Include="HastyClient\Packet\HastyPacket.cs" />
+    <Compile Include="HastyClient\Packet\PacketDecoder.cs" />
+    <Compile Include="HastyClient\Packet\PacketLength.cs" />
+    <Compile Include="HastyClient\Stream\IStreamReader.cs" />
+    <Compile Include="HastyClient\Stream\IStreamWriter.cs" />
+    <Compile Include="HastyClient\Stream\ReceiveStream.cs" />
+    <Compile Include="HastyClient\Stream\StreamReader.cs" />
+    <Compile Include="HastyClient\Stream\StreamWriter.cs" />
+    <Compile Include="HastyClient\Octet\OctetQueue.cs" />
+    <Compile Include="HastyClient\Octet\OctetReader.cs" />
+    <Compile Include="HastyClient\Octet\OctetWriter.cs" />
+    <Compile Include="HastyClient\Packet\IPacketReceiver.cs" />
+    <Compile Include="HastyClient\Command\CommandExecutor.cs" />
+    <Compile Include="HastyClient\Command\CommandTarget.cs" />
+    <Compile Include="HastyClient\Command\ICommandTarget.cs" />
+    <Compile Include="HastyClient\Command\ICommandTargetCreator.cs" />
+    <Compile Include="HastyClient\PacketHandler\ExecutorPacketReceiver.cs" />
+    <Compile Include="HastyClient\Client\ConnectionStatus.cs" />
+    <Compile Include="HastyClient\Storage\IStreamStorage.cs" />
+    <Compile Include="HastyClient\Storage\StreamStorage.cs" />
+    <Compile Include="HastyClient\Octet\IOctetReader.cs" />
+    <Compile Include="HastyClient\Octet\IOctetWriter.cs" />
+    <Compile Include="HastyClient\Octet\EndianConverter.cs" />
+    <Compile Include="HastyClient\Client\StreamHandler.cs" />
+    <Compile Include="HastyClient\Log\ILog.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="HastyClient\Connection\" />
+    <Folder Include="HastyClient\Model\" />
+    <Folder Include="HastyClient\Protocol\" />
+    <Folder Include="HastyClient\Debug\" />
+    <Folder Include="HastyClient\Client\" />
+    <Folder Include="HastyClient\Packet\" />
+    <Folder Include="HastyClient\Stream\" />
+    <Folder Include="HastyClient\Octet\" />
+    <Folder Include="HastyClient\Command\" />
+    <Folder Include="HastyClient\PacketHandler\" />
+    <Folder Include="HastyClient\Storage\" />
+    <Folder Include="HastyClient\Log\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>
