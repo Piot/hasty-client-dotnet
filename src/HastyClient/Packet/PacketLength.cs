@@ -24,7 +24,7 @@ namespace Hasty.Client.Packet
 				throw new Exception("Must have at least two octets");
 			}
 			octetsUsed = 2;
-			return data[index] + data[index+1] * (uint)0x100;
+			return (uint)(data[index] & 0x7f) * (uint)0x100 + (uint)data[index+1];
 		}
 	}
 }

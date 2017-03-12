@@ -18,12 +18,15 @@
 		{
 			var msb = (byte)(len % 256U);
 
-			octetReader.WriteUint8(msb);
-
 			if (msb > 127U)
 			{
 				var lsb = (byte)(len / 256U);
-				octetReader.WriteUint8(lsb);
+				octetReader.WriteUint8((byte)((lsb & 0x7f) | 0x80));
+				octetReader.WriteUint8(msb);
+			}
+			else
+			{
+				octetReader.WriteUint8(msb);
 			}
 		}
 

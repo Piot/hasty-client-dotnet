@@ -21,6 +21,7 @@ namespace Hasty
 
 		public void Add(byte[] octets)
 		{
+			log.Debug("Adding to receive stream:{0:X}", octets);
 			queue.Enqueue(octets, 0, octets.Length);
 			HastyPacket packet = null;
 			do
@@ -29,6 +30,7 @@ namespace Hasty
 
 				if (octetCount == 0)
 				{
+					log.Debug("octetCount zero");
 					return;
 				}
 				int newOffset;
@@ -39,6 +41,10 @@ namespace Hasty
 					log.Debug("Got packet!");
 					queue.Skip(newOffset);
 					packetReceiver.ReceivePacket(packet);
+				}
+				else
+				{
+					log.Debug("No packet so far");
 				}
 			} while (packet != null);
 		}

@@ -164,7 +164,7 @@ namespace Hasty.Client.Api
 		{
 			var streamId = streamReader.ReadUint32();
 			var streamOffset = streamReader.ReadUint32();
-			var payloadInPacket = streamReader.ReadUint8();
+			var payloadInPacket = streamReader.ReadLength();
 			var octetCount = streamReader.RemainingOctetCount;
 
 			if (octetCount != payloadInPacket)
@@ -192,14 +192,17 @@ namespace Hasty.Client.Api
 					return;
 				}
 			}
-			var octetsToWrite = (uint)(octets.Length - startIndexInData);
 
+			var octetsToWrite = (uint)(octets.Length - startIndexInData);
+			log.Debug("Streamx id:{0:X} startIndexInData:{1} octetsToWrite:{2}", streamId, startIndexInData, octetsToWrite);
 			streamStorage.Append(streamId, octets, startIndexInData, octetsToWrite);
 			InternalOnStreamData(streamId, octets, startIndexInData, octetsToWrite);
 		}
 
 		void InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
 		{
+			log.Debug("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
+
 			StreamHandler streamHandler;
 			var worked = streamHandlers.TryGetValue(streamId, out streamHandler);
 
@@ -210,6 +213,7 @@ namespace Hasty.Client.Api
 			}
 			var buf = new byte[octetsToWrite];
 			Buffer.BlockCopy(octets, (int)streamOffset, buf, 0, (int)octetsToWrite);
+			log.Debug("Receive it");
 			streamHandler.Receive(buf);
 		}
 
