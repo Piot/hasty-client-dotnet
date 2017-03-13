@@ -8,6 +8,8 @@
 
 		void WriteUint32(uint a);
 
+		void WriteUint64(ulong a);
+
 		byte[] Close();
 	}
 }

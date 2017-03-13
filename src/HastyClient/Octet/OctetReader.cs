@@ -36,6 +36,11 @@ namespace Hasty.Client.Octet
 			return EndianConverter.BytesToUint32(ReadOctets(4));
 		}
 
+		public ulong ReadUint64()
+		{
+			return EndianConverter.BytesToUint64(ReadOctets(8));
+		}
+
 		public byte ReadUint8()
 		{
 			var v = octets[pos++];

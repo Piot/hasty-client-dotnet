@@ -61,6 +61,11 @@ namespace Hasty.Client
 			return octetReader.ReadUint32();
 		}
 
+		public ulong ReadUint64()
+		{
+			return octetReader.ReadUint64();
+		}
+
 		public byte ReadUint8()
 		{
 			return octetReader.ReadUint8();

@@ -11,5 +11,7 @@
 		public const byte StreamData = 0x86;
 		public const byte Connect = 0x87;
 		public const byte ConnectResult = 0x88;
+		public const byte Ping = 0x89;
+		public const byte Pong = 0x8A;
 	}
 }

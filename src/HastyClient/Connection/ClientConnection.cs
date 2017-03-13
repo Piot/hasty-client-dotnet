@@ -90,5 +90,10 @@ namespace Hasty.Client.Connection
 			Buffer.BlockCopy(buf, 0, logBuf, 0, receivedOctets);
 			log.Debug("Received:'{0}'", OctetBufferDebug.OctetsToHex(logBuf));
 		}
+
+		internal void Disconnect(string reason)
+		{
+			Disconnected(reason);
+		}
 	}
 }

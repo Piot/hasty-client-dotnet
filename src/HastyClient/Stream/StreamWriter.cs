@@ -1,4 +1,6 @@
-﻿namespace Hasty.Client
+﻿using System;
+
+namespace Hasty.Client
 {
 	public class StreamWriter : IStreamWriter
 	{
@@ -49,6 +51,11 @@
 		public void WriteUint32(uint data)
 		{
 			octetReader.WriteUint32(data);
+		}
+
+		public void WriteUint64(ulong data)
+		{
+			octetReader.WriteUint64(data);
 		}
 
 		public void WriteUint8(byte data)

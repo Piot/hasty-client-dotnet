@@ -74,6 +74,11 @@
     <Compile Include="HastyClient\Octet\EndianConverter.cs" />
     <Compile Include="HastyClient\Client\StreamHandler.cs" />
     <Compile Include="HastyClient\Log\ILog.cs" />
+    <Compile Include="HastyClient\Connection\IntervalTimer.cs" />
+    <Compile Include="HastyClient\Model\PingCommand.cs" />
+    <Compile Include="HastyClient\Protocol\PingSerializer.cs" />
+    <Compile Include="HastyClient\Model\Timestamp.cs" />
+    <Compile Include="HastyClient\Connection\OneShotTimer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="HastyClient\Connection\" />

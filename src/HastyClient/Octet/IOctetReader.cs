@@ -6,6 +6,8 @@
 
 		uint ReadUint32();
 
+		ulong ReadUint64();
+
 		byte ReadUint8();
 
 		byte[] ReadOctets(int octetCount);

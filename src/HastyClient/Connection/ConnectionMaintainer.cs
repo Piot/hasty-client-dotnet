@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Timers;
 using Hasty.Client.Debug;
 using Hasty.Client.Model;
 using Hasty.Client.Octet;
@@ -14,7 +13,9 @@ namespace Hasty.Client.Connection
 	public class ConnectionMaintainer
 	{
 		Uri serverUrl;
-		Timer timer;
+		Uri mainUrl;
+		OneShotTimer connectAgainTimer;
+		IntervalTimer pingTimer;
 		ClientConnection connection;
 		Random random;
 		string realm;
@@ -25,6 +26,7 @@ namespace Hasty.Client.Connection
 		public Action OnConnecting;
 		public Action OnConnected;
 		ILog log;
+		ulong lastReceivedPacketTime;
 
 		public ConnectionMaintainer(Uri serverUrl, string realm, ILog log)
 		{
@@ -32,11 +34,19 @@ namespace Hasty.Client.Connection
 
 			random = new Random();
 			this.serverUrl = serverUrl;
+			mainUrl = serverUrl;
 			this.realm = realm;
 		}
 
 		public void Start()
 		{
+			Connect();
+		}
+
+		internal void SwitchToTemporaryHost(Uri url)
+		{
+			connection.Disconnect("redirected");
+			serverUrl = url;
 			Connect();
 		}
 
@@ -58,12 +68,29 @@ namespace Hasty.Client.Connection
 		private void SetupStream(Stream stream)
 		{
 			log.Debug("We are connected!");
+			lastReceivedPacketTime = Timestamp.Now();
+
 			connection = new ClientConnection(stream, log);
 			connection.OnDisconnected += ConnectionDisconnected;
 			connection.OnOctetQueueChanged += OctetQueueChanged;
 			connection.Start();
 			OnConnected();
 			WritePacket(ConnectPacket());
+			pingTimer = new IntervalTimer(10000);
+			pingTimer.OnElapsed += PingUpdate;
+			pingTimer.Start();
+		}
+
+		void PingUpdate()
+		{
+			log.Debug("OnPingTime");
+			SendPing(Timestamp.Now());
+			var timeSinceLastHeardSomething = Timestamp.Now() - lastReceivedPacketTime;
+
+			if (timeSinceLastHeardSomething > 15000)
+			{
+				connection.Disconnect("timedout");
+			}
 		}
 
 		internal void Write(byte[] octets)
@@ -71,6 +98,23 @@ namespace Hasty.Client.Connection
 			var packet = new HastyPacket(octets);
 
 			WritePacket(packet);
+		}
+
+		public void SendPing(ulong sentTime)
+		{
+			WritePacket(PingPacket(sentTime));
+		}
+
+		private HastyPacket PingPacket(ulong ms)
+		{
+			var writer = new OctetWriter();
+			var outStream = new StreamWriter(writer);
+			var cmd = new PingCommand(ms);
+
+			PingSerializer.SerializePing(outStream, cmd);
+			var payload = writer.Close();
+			var packet = PacketCreator.Create(Commands.Ping, payload);
+			return packet;
 		}
 
 		private HastyPacket ConnectPacket()
@@ -99,6 +143,7 @@ namespace Hasty.Client.Connection
 		private void OctetQueueChanged(OctetQueue queue)
 		{
 			log.Debug("OctetQueue changed {0}", queue);
+			lastReceivedPacketTime = Timestamp.Now();
 			var tempBuf = new byte[1024];
 			while (true)
 			{
@@ -131,9 +176,13 @@ namespace Hasty.Client.Connection
 		private void ConnectionDisconnected()
 		{
 			log.Warning("Connection is disconnected");
+			pingTimer.Stop();
+			pingTimer = null;
 			connection.Close();
 			connection = null;
 			OnDisconnect();
+			// Go back to main url if we get disconnected
+			serverUrl = mainUrl;
 			ConnectAgainLater();
 		}
 
@@ -141,18 +190,16 @@ namespace Hasty.Client.Connection
 		{
 			log.Debug("Connect later...");
 			var waitTime = random.Next(800, 2000);
-			timer = new Timer() {
-				Interval = waitTime
-			};
-			timer.Elapsed += TimerElapsed;
-			timer.Start();
+
+			connectAgainTimer = new OneShotTimer(waitTime);
+			connectAgainTimer.OnElapsed += ConnectElapsed;
+			connectAgainTimer.Start();
 		}
 
-		private void TimerElapsed(object sender, ElapsedEventArgs args)
+		private void ConnectElapsed()
 		{
-			timer.Stop();
-			timer.Dispose();
-			timer = null;
+			connectAgainTimer.Stop();
+			connectAgainTimer = null;
 
 			log.Debug("Timer Elapsed!");
 			Connect();

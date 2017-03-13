@@ -25,6 +25,11 @@ namespace Hasty.Client.Octet
 			Write(EndianConverter.Uint32ToBytes(data));
 		}
 
+		public void WriteUint64(ulong data)
+		{
+			Write(EndianConverter.Uint64ToBytes(data));
+		}
+
 		public void WriteUint8(byte data)
 		{
 			writer.Write(data);

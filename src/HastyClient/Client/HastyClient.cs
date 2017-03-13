@@ -150,14 +150,30 @@ namespace Hasty.Client.Api
 			switch (packet.Command)
 			{
 			case Commands.ConnectResult:
-				ConnectResult(packet);
+				ConnectResult(streamReader);
 				break;
 			case Commands.StreamData:
 				StreamData(streamReader);
 				break;
+			case Commands.Ping:
+				Ping(streamReader);
+				break;
+			case Commands.Pong:
+				Pong(streamReader);
+				break;
 			default:
 				throw new Exception(string.Format("Unknown internal command {0}", packet.Command));
 			}
+		}
+
+		void Ping(StreamReader streamReader)
+		{
+			log.Debug("onPing");
+		}
+
+		void Pong(StreamReader streamReader)
+		{
+			log.Debug("OnPong");
 		}
 
 		void StreamData(IStreamReader streamReader)
@@ -217,9 +233,22 @@ namespace Hasty.Client.Api
 			streamHandler.Receive(buf);
 		}
 
-		void ConnectResult(HastyPacket packet)
+		void ConnectResult(IStreamReader stream)
 		{
 			log.Debug("ConnectResult");
+			var result = stream.ReadUint8();
+			switch (result)
+			{
+			case 1:
+				log.Debug("Connect was ok");
+				break;
+			case 2:
+				log.Debug("Redirect");
+				var urlString = stream.ReadString();
+				var url = new Uri(urlString);
+				connectionMaintainer.SwitchToTemporaryHost(url);
+				break;
+			}
 		}
 	}
 }
