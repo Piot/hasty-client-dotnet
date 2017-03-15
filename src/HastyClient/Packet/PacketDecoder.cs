@@ -26,13 +26,14 @@ namespace Hasty.Client.Packet
 			}
 			int lengthOctetOffset;
 			var octetsToWaitFor = (int)PacketLength.Convert(octets, octetOffset,  out lengthOctetOffset);
-			log.Debug("Waiting for {0} octets lengthOctets {1}", octetsToWaitFor, lengthOctetOffset);
 
 			if (octetSize - lengthOctetOffset < octetsToWaitFor)
 			{
+				log.Debug("Waiting for {0} octets lengthOctets {1} offset:{2} buffSize:{3}", octetsToWaitFor, lengthOctetOffset, octetOffset, octetSize);
 				newOffset = 0;
 				return null;
 			}
+			log.Debug("Packet done! {0} octets lengthOctets {1}", octetsToWaitFor, lengthOctetOffset);
 			newOffset = octetOffset + octetsToWaitFor + lengthOctetOffset;
 			var packetData = new byte[octetsToWaitFor];
 			Buffer.BlockCopy(octets, octetOffset + lengthOctetOffset, packetData, 0, octetsToWaitFor);

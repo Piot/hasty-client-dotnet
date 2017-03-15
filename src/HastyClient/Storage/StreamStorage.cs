@@ -57,7 +57,7 @@ namespace Hasty.Client.Storage
 			}
 			else
 			{
-				file = File.Open(path, FileMode.Append);
+				file = File.Open(path, FileMode.Open);
 			}
 			var alreadyWrittenOctetCount = file.Seek(0, SeekOrigin.End);
 			log.Debug("Writing to file '{0}' pos:{1} data:{2}", path, alreadyWrittenOctetCount, octets.Length);

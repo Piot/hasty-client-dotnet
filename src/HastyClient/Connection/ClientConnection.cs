@@ -15,7 +15,7 @@ namespace Hasty.Client.Connection
 		public Action<OctetQueue> OnOctetQueueChanged;
 
 		private byte[] receiveBuffer = new byte[8142];
-		const int bufSize = 1024;
+		const int bufSize = 8192;
 		OctetQueue octetQueue = new OctetQueue(bufSize);
 		ILog log;
 

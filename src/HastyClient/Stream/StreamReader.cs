@@ -5,9 +5,11 @@ namespace Hasty.Client
 	public class StreamReader : IStreamReader
 	{
 		IOctetReader octetReader;
+		ILog log;
 
-		public StreamReader(IOctetReader octetReader)
+		public StreamReader(IOctetReader octetReader, ILog log)
 		{
+			this.log = log;
 			this.octetReader = octetReader;
 		}
 
@@ -26,7 +28,7 @@ namespace Hasty.Client
 			if (len > 127U)
 			{
 				ushort second = (ushort)(ReadUint8());
-				var totalLength = (len  & 0x7f) * 0x100 + second;
+				var totalLength = (len & 0x7f) * 0x100 + second;
 				len = (ushort)totalLength;
 			}
 			return len;

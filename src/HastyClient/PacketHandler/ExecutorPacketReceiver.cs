@@ -30,7 +30,7 @@ namespace Hasty.Client.PacketHandler
 			}
 			var octetReader = new OctetReader(packet.Octets, log);
 			octetReader.ReadUint8();
-			var stream = new StreamReader(octetReader);
+			var stream = new StreamReader(octetReader, log);
 
 			commandTarget.Execute(stream);
 		}

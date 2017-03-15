@@ -144,7 +144,7 @@ namespace Hasty.Client.Connection
 		{
 			log.Debug("OctetQueue changed {0}", queue);
 			lastReceivedPacketTime = Timestamp.Now();
-			var tempBuf = new byte[1024];
+			var tempBuf = new byte[32*1024];
 			while (true)
 			{
 				var octetCount = queue.Peek(tempBuf, 0, tempBuf.Length);

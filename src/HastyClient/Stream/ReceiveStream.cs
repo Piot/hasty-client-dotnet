@@ -1,4 +1,3 @@
-using System;
 using Hasty.Client.Packet;
 using Hasty.Client.Shared;
 using Hasty.Client.Api;
@@ -7,7 +6,7 @@ namespace Hasty
 {
 	public class ReceiveStream
 	{
-		const int maxPacketSize = 1024;
+		const int maxPacketSize = 256 * 1024;
 		OctetQueue queue = new OctetQueue(maxPacketSize * 2);
 		byte[] targetBuffer = new byte[maxPacketSize];
 		IPacketReceiver packetReceiver;

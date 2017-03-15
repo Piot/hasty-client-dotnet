@@ -145,7 +145,7 @@ namespace Hasty.Client.Api
 			var octetReader = new OctetReader(packet.Octets, log);
 
 			octetReader.ReadUint8();
-			var streamReader = new StreamReader(octetReader);
+			var streamReader = new StreamReader(octetReader, log);
 
 			switch (packet.Command)
 			{
@@ -190,29 +190,27 @@ namespace Hasty.Client.Api
 			}
 			log.Debug("Stream id:{0:X} offset:{1} octetCount:{2}", streamId, streamOffset, octetCount);
 
-			uint startIndexInData = 0;
-			var alreadyWrittenOctetCount = (uint) streamStorage.FileSize(streamId);
-			var octets = streamReader.ReadOctets(octetCount);
+			var alreadyWrittenOctetCount = streamStorage.FileSize(streamId);
+			var streamDataOctets = streamReader.ReadOctets(octetCount);
 
-			if (streamOffset < alreadyWrittenOctetCount)
+			var startIndexInStreamDataOctets = alreadyWrittenOctetCount - streamOffset;
+
+			if (startIndexInStreamDataOctets < 0)
 			{
-				var lastOffsetInData = streamOffset + (uint) octets.Length - 1;
-
-				if (lastOffsetInData > alreadyWrittenOctetCount)
-				{
-					startIndexInData = (lastOffsetInData - alreadyWrittenOctetCount);
-				}
-				else
-				{
-					log.Warning("Already received the data");
-					return;
-				}
+				log.Warning("We have been sent data with a 'gap'! Can not write.");
+				return;
 			}
 
-			var octetsToWrite = (uint)(octets.Length - startIndexInData);
-			log.Debug("Streamx id:{0:X} startIndexInData:{1} octetsToWrite:{2}", streamId, startIndexInData, octetsToWrite);
-			streamStorage.Append(streamId, octets, startIndexInData, octetsToWrite);
-			InternalOnStreamData(streamId, octets, startIndexInData, octetsToWrite);
+			if (startIndexInStreamDataOctets >= streamDataOctets.Length)
+			{
+				log.Warning("This is old news and contains no new octets. Skipping...");
+				return;
+			}
+			var startWritePosition = (uint)startIndexInStreamDataOctets;
+			var octetsToWrite = (uint)(streamDataOctets.Length - startIndexInStreamDataOctets);
+			log.Debug("Streamx id:{0:X} startIndexInData:{1} octetsToWrite:{2}", streamId, startIndexInStreamDataOctets, octetsToWrite);
+			streamStorage.Append(streamId, streamDataOctets, startWritePosition, octetsToWrite);
+			InternalOnStreamData(streamId, streamDataOctets, startWritePosition, octetsToWrite);
 		}
 
 		void InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
