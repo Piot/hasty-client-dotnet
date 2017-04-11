@@ -48,6 +48,12 @@ namespace Hasty.Client.Connection
 				log.Warning("AR is not completed!");
 				return;
 			}
+
+			if (stream == null)
+			{
+				log.Warning("Stream is null");
+				return;
+			}
 			int receivedOctets = -1;
 			try
 			{
@@ -73,8 +79,9 @@ namespace Hasty.Client.Connection
 
 		public void Write(byte[] data)
 		{
-			log.Debug("Write:{0}", OctetBufferDebug.OctetsToHex(data));
+			// log.Debug("Write:{0}", OctetBufferDebug.OctetsToHex(data));
 			stream.Write(data, 0, data.Length);
+			stream.Flush();
 		}
 
 		void Disconnected(string reason)

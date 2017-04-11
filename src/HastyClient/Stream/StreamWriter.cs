@@ -62,5 +62,15 @@ namespace Hasty.Client
 		{
 			octetReader.WriteUint8(data);
 		}
+
+		public void WriteOctets(byte[] data)
+		{
+			octetReader.WriteOctets(data);
+		}
+
+		public void WriteBool(bool v)
+		{
+			octetReader.WriteUint8(v ? (byte)0x01 : (byte)0x00);
+		}
 	}
 }

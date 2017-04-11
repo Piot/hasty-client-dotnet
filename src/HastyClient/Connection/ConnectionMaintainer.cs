@@ -26,7 +26,7 @@ namespace Hasty.Client.Connection
 		public Action OnConnecting;
 		public Action OnConnected;
 		ILog log;
-		ulong lastReceivedPacketTime;
+		Timestamp lastReceivedPacketTime;
 
 		public ConnectionMaintainer(Uri serverUrl, string realm, ILog log)
 		{
@@ -75,7 +75,6 @@ namespace Hasty.Client.Connection
 			connection.OnOctetQueueChanged += OctetQueueChanged;
 			connection.Start();
 			OnConnected();
-			WritePacket(ConnectPacket());
 			pingTimer = new IntervalTimer(10000);
 			pingTimer.OnElapsed += PingUpdate;
 			pingTimer.Start();
@@ -87,7 +86,7 @@ namespace Hasty.Client.Connection
 			SendPing(Timestamp.Now());
 			var timeSinceLastHeardSomething = Timestamp.Now() - lastReceivedPacketTime;
 
-			if (timeSinceLastHeardSomething > 15000)
+			if (timeSinceLastHeardSomething.Raw > 15000)
 			{
 				connection.Disconnect("timedout");
 			}
@@ -100,12 +99,12 @@ namespace Hasty.Client.Connection
 			WritePacket(packet);
 		}
 
-		public void SendPing(ulong sentTime)
+		public void SendPing(Timestamp sentTime)
 		{
 			WritePacket(PingPacket(sentTime));
 		}
 
-		private HastyPacket PingPacket(ulong ms)
+		private HastyPacket PingPacket(Timestamp ms)
 		{
 			var writer = new OctetWriter();
 			var outStream = new StreamWriter(writer);
@@ -117,32 +116,17 @@ namespace Hasty.Client.Connection
 			return packet;
 		}
 
-		private HastyPacket ConnectPacket()
-		{
-			var writer = new OctetWriter();
-			var outStream = new StreamWriter(writer);
-
-			var protocolVersion = new Model.Version(0, 0, 1);
-			var cmd = new ConnectCommand(protocolVersion, realm);
-
-			ConnectSerializer.SerializeConnect(outStream, cmd);
-			var payload = writer.Close();
-
-			var packet = PacketCreator.Create(Commands.Connect, payload);
-			return packet;
-		}
 
 		private void WritePacket(HastyPacket packet)
 		{
-			connection.Write(new byte[] { (byte)packet.Length });
-
 			log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
+			connection.Write(new byte[] { (byte)packet.Length });
 			connection.Write(packet.Octets);
 		}
 
 		private void OctetQueueChanged(OctetQueue queue)
 		{
-			log.Debug("OctetQueue changed {0}", queue);
+			// log.Debug("OctetQueue changed {0}", queue);
 			lastReceivedPacketTime = Timestamp.Now();
 			var tempBuf = new byte[32*1024];
 			while (true)
@@ -203,6 +187,12 @@ namespace Hasty.Client.Connection
 
 			log.Debug("Timer Elapsed!");
 			Connect();
+		}
+
+		public void Disconnect(string reason)
+		{
+			log.Debug("Forced disconnect. Reason '{0}'", reason);
+			connection.Close();
 		}
 	}
 }

@@ -21,6 +21,7 @@ namespace Hasty.Client.Packet
 
 			if (octetSize < 2)
 			{
+				log.Debug("octet size <= 2");
 				newOffset = 0;
 				return null;
 			}
@@ -33,7 +34,7 @@ namespace Hasty.Client.Packet
 				newOffset = 0;
 				return null;
 			}
-			log.Debug("Packet done! {0} octets lengthOctets {1}", octetsToWaitFor, lengthOctetOffset);
+			// log.Debug("Packet done! {0} octets lengthOctets {1}", octetsToWaitFor, lengthOctetOffset);
 			newOffset = octetOffset + octetsToWaitFor + lengthOctetOffset;
 			var packetData = new byte[octetsToWaitFor];
 			Buffer.BlockCopy(octets, octetOffset + lengthOctetOffset, packetData, 0, octetsToWaitFor);

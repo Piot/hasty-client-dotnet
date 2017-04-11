@@ -13,5 +13,7 @@
 		public const byte ConnectResult = 0x88;
 		public const byte Ping = 0x89;
 		public const byte Pong = 0x8A;
+		public const byte Login = 0x8B;
+		public const byte LoginResult = 0x8C;
 	}
 }

@@ -40,7 +40,7 @@ namespace Hasty.Client.Packet
 
 		public override string ToString()
 		{
-			return string.Format("[Packet: Command={0}, Length={1}]", Command, Length);
+			return string.Format("[Packet: Command={0:X}, Length={1}]", Command, Length);
 		}
 	}
 }

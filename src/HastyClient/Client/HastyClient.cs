@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Hasty.Client.Connection;
+using Hasty.Client.Model;
 using Hasty.Client.Octet;
 using Hasty.Client.Packet;
 using Hasty.Client.PacketHandler;
+using Hasty.Client.Serializer;
 using Hasty.Client.Storage;
 
 namespace Hasty.Client.Api
@@ -14,26 +16,35 @@ namespace Hasty.Client.Api
 		ExecutorPacketReceiver receiver;
 
 		ConnectionStatus status;
+		ConnectionState state;
+
 		IStreamStorage streamStorage;
 		uint subscribingChannel;
 		Dictionary<uint, StreamHandler> streamHandlers = new Dictionary<uint, StreamHandler>();
 		CommandDefinitions definitions;
 
 		ILog log;
+		string username;
+		string password;
+		string realm;
 
-		public HastyClient(Uri serverUrl, string realm, CommandDefinitions definitions, string baseDir, ILog log)
+		public HastyClient(Uri serverUrl, string realm, string username, string password, CommandDefinitions definitions, string baseDir, ILog log)
 		{
+			this.username = username;
+			this.password = password;
+			this.realm = realm;
 			this.log = log.CreateLog(typeof(HastyClient));
 			var storage = new StreamStorage(baseDir, log);
 			streamStorage = storage;
 			this.definitions = definitions;
 
 			SetStatus(ConnectionStatus.Idle);
+			SetState(ConnectionState.Establishing);
 			connectionMaintainer = new ConnectionMaintainer(serverUrl, realm, log);
 			connectionMaintainer.OnPacketRead += OnPacketRead;
 			connectionMaintainer.OnDisconnect += OnDisconnect;
 			connectionMaintainer.OnConnecting += OnConnecting;
-			connectionMaintainer.OnConnected += OnConnected;
+			connectionMaintainer.OnConnected += OnMaintainerConnected;
 			connectionMaintainer.Start();
 		}
 
@@ -47,24 +58,68 @@ namespace Hasty.Client.Api
 			SetStatus(ConnectionStatus.Connecting);
 		}
 
+		void OnMaintainerConnected()
+		{
+			SendPacket(ConnectPacket().Octets);
+
+
+		}
+
 		void OnConnected()
 		{
 			SetStatus(ConnectionStatus.Connected);
 
+			Login();
+		}
+
+		private HastyPacket ConnectPacket()
+		{
+			var writer = new OctetWriter();
+			var outStream = new StreamWriter(writer);
+
+			var protocolVersion = new Model.Version(0, 0, 1);
+			var cmd = new ConnectCommand(protocolVersion, realm);
+
+			ConnectSerializer.SerializeConnect(outStream, cmd);
+			var payload = writer.Close();
+
+			var packet = PacketCreator.Create(Commands.Connect, payload);
+			return packet;
+		}
+
+
+		void Login()
+		{
+			SetState(ConnectionState.LoggingIn);
+			SendLogin(username, password);
+		}
+
+		void OnLoggedIn()
+		{
+			if (state == ConnectionState.LoggedIn)
+			{
+				return;
+			}
 			if (subscribingChannel != 0)
 			{
 				var offset = (uint)0;
 				SendSubscribe(subscribingChannel, offset);
 			}
+			SetState(ConnectionState.LoggedIn);
 		}
 
-		IStreamWriter CreateStream(byte command)
+		IStreamWriter CreateStreamInternal()
 		{
 			var octetWriter = new OctetWriter();
 			var streamWriter = new StreamWriter(octetWriter);
 
-			streamWriter.WriteUint8(command);
+			return streamWriter;
+		}
 
+		IStreamWriter CreateStream(byte command)
+		{
+			var streamWriter = CreateStreamInternal();
+			streamWriter.WriteUint8(command);
 			return streamWriter;
 		}
 
@@ -81,6 +136,25 @@ namespace Hasty.Client.Api
 			{
 				SendSubscribe(streamId, (uint)data.Length);
 			}
+		}
+
+		public Command CreateCommand(byte commandId)
+		{
+			var stream = CreateStreamInternal();
+			return new Command(stream, commandId);
+		}
+
+		public void SendCommand(ushort streamId, Command command)
+		{
+			var channel = new ChannelID(streamId);
+			var payload = command.Stream.Close();
+			var isAtEndPosition = true;
+			var offset = new StreamOffset(0);
+			var streamData = new StreamDataCommand(channel, payload, isAtEndPosition, offset);
+
+			var stream = CreateStream(Commands.StreamData);
+			StreamDataSerializer.SerializeStreamData(stream, streamData);
+			SendPacket(stream);
 		}
 
 		private bool IsConnected
@@ -103,6 +177,23 @@ namespace Hasty.Client.Api
 			SendPacket(stream);
 		}
 
+		void SendLogin(string username, string password)
+		{
+			log.Debug("SendLogin {0} ****", username);
+			var stream = CreateStream(Commands.Login);
+			var login = new LoginCommand(username, password);
+			LoginSerializer.SerializeLogin(stream, login);
+			SendPacket(stream);
+		}
+
+		void SendPong(Timestamp echoedTime)
+		{
+			var stream = CreateStream(Commands.Pong);
+			var pong = new PongCommand(Timestamp.Now(), echoedTime);
+			PongSerializer.SerializePong(stream, pong);
+			SendPacket(stream);
+		}
+
 		void SendPacket(IStreamWriter stream)
 		{
 			var octets = stream.Close();
@@ -121,9 +212,15 @@ namespace Hasty.Client.Api
 			this.status = status;
 		}
 
+		void SetState(ConnectionState state)
+		{
+			log.Debug("Connection state:{0}", state);
+			this.state = state;
+		}
+
 		private void OnPacketRead(HastyPacket packet)
 		{
-			log.Debug("PacketRead:{0}", packet);
+			// log.Debug("PacketRead:{0}", packet);
 
 			if (packet.Command >= 128)
 			{
@@ -142,6 +239,7 @@ namespace Hasty.Client.Api
 
 		void InternalPacket(HastyPacket packet)
 		{
+			log.Debug("Received internal packet: {0}", packet);
 			var octetReader = new OctetReader(packet.Octets, log);
 
 			octetReader.ReadUint8();
@@ -149,31 +247,43 @@ namespace Hasty.Client.Api
 
 			switch (packet.Command)
 			{
-			case Commands.ConnectResult:
-				ConnectResult(streamReader);
-				break;
-			case Commands.StreamData:
-				StreamData(streamReader);
-				break;
-			case Commands.Ping:
-				Ping(streamReader);
-				break;
-			case Commands.Pong:
-				Pong(streamReader);
-				break;
-			default:
-				throw new Exception(string.Format("Unknown internal command {0}", packet.Command));
+				case Commands.ConnectResult:
+					ConnectResult(streamReader);
+					break;
+				case Commands.LoginResult:
+					LoginResult(streamReader);
+					break;
+				case Commands.StreamData:
+					StreamData(streamReader);
+					break;
+				case Commands.Ping:
+					Ping(streamReader);
+					break;
+				case Commands.Pong:
+					Pong(streamReader);
+					break;
+				default:
+					throw new Exception(string.Format("Unknown internal command {0}", packet.Command));
 			}
 		}
 
 		void Ping(StreamReader streamReader)
 		{
 			log.Debug("onPing");
+			PingCommand ping;
+			PingDeserializer.DeserializePing(streamReader, out ping);
+
+			SendPong(ping.SentTime);
 		}
 
 		void Pong(StreamReader streamReader)
 		{
 			log.Debug("OnPong");
+			PongCommand pong;
+			PongDeserializer.DeserializePong(streamReader, out pong);
+			var now = Timestamp.Now();
+			var latency = now - pong.EchoedTime;
+			log.Debug("now:{0} echo:{1} sent:{2} Latency:{3}", now, pong.EchoedTime, pong.SentTime, latency);
 		}
 
 		void StreamData(IStreamReader streamReader)
@@ -215,7 +325,7 @@ namespace Hasty.Client.Api
 
 		void InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
 		{
-			log.Debug("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
+			// log.Debug("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
 
 			StreamHandler streamHandler;
 			var worked = streamHandlers.TryGetValue(streamId, out streamHandler);
@@ -227,7 +337,6 @@ namespace Hasty.Client.Api
 			}
 			var buf = new byte[octetsToWrite];
 			Buffer.BlockCopy(octets, (int)streamOffset, buf, 0, (int)octetsToWrite);
-			log.Debug("Receive it");
 			streamHandler.Receive(buf);
 		}
 
@@ -237,16 +346,34 @@ namespace Hasty.Client.Api
 			var result = stream.ReadUint8();
 			switch (result)
 			{
-			case 1:
-				log.Debug("Connect was ok");
-				break;
-			case 2:
-				log.Debug("Redirect");
-				var urlString = stream.ReadString();
-				var url = new Uri(urlString);
-				connectionMaintainer.SwitchToTemporaryHost(url);
-				break;
+				case 1:
+					log.Debug("Connect was ok");
+					OnConnected();
+					break;
+				case 2:
+					log.Debug("Redirect");
+					var urlString = stream.ReadString();
+					var url = new Uri(urlString);
+					connectionMaintainer.SwitchToTemporaryHost(url);
+					break;
 			}
+		}
+		void LoginResult(IStreamReader stream)
+		{
+			log.Debug("LoginResult");
+			var result = stream.ReadUint8();
+			switch (result)
+			{
+				case 1:
+					log.Debug("Login was ok");
+					OnLoggedIn();
+					break;
+				default:
+					log.Debug("Login failed");
+					connectionMaintainer.Disconnect("Login Failed");
+					break;
+			}
+
 		}
 	}
 }

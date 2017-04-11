@@ -6,6 +6,7 @@
 
 		void WriteLength(ushort length);
 
-		void WriteUint64(ulong v);
+
+		void WriteBool(bool v);
 	}
 }

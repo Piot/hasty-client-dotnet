@@ -40,15 +40,22 @@ namespace Hasty.Client.Octet
 			writer.Write(data);
 		}
 
+		public void WriteOctets(byte[] data)
+		{
+			writer.Write(data);
+		}
+
 		public byte[] Close()
 		{
 			var writeBuf = memoryStream.GetBuffer();
-			var octetsWritten = (int) memoryStream.Length;
+			var octetsWritten = (int)memoryStream.Length;
 			var bufferToReturn = new byte[octetsWritten];
 
 			Buffer.BlockCopy(writeBuf, 0, bufferToReturn, 0, octetsWritten);
 
 			return bufferToReturn;
 		}
+
+
 	}
 }

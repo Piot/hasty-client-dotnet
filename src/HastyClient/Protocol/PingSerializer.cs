@@ -6,7 +6,7 @@ namespace Hasty.Client.Serializer
 	{
 		public static void SerializePing(IStreamWriter writer, PingCommand ping)
 		{
-			writer.WriteUint64(ping.SentTime);
+			writer.WriteUint64(ping.SentTime.Raw);
 		}
 	}
 }

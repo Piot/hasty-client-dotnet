@@ -14,7 +14,7 @@ namespace TestProgram
 			var definitions = new CommandDefinitions();
 			definitions.AddCommand(1, "settext");
 			definitions.AddCommand(0xaa, "setcolor");
-			client = new HastyClient(new Uri("tcps://localhost:3333"), "com.hastydb.test", definitions, ".db/", log);
+			client = new HastyClient(new Uri("tcps://localhost:28888"), "com.hastyd.chat.test", "test", "test", definitions, ".db/", log);
 			client.Subscribe(0, this);
 		}
 

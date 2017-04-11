@@ -10,6 +10,8 @@
 
 		void WriteUint64(ulong a);
 
+		void WriteOctets(byte[] data);
+
 		byte[] Close();
 	}
 }

@@ -79,6 +79,25 @@
     <Compile Include="HastyClient\Protocol\PingSerializer.cs" />
     <Compile Include="HastyClient\Model\Timestamp.cs" />
     <Compile Include="HastyClient\Connection\OneShotTimer.cs" />
+    <Compile Include="HastyClient\Model\PublishStreamCommand.cs" />
+    <Compile Include="HastyClient\Protocol\PublishStreamSerializer.cs" />
+    <Compile Include="HastyClient\Model\ChannelID.cs" />
+    <Compile Include="HastyClient\Protocol\ChannelIdSerializer.cs" />
+    <Compile Include="HastyClient\Protocol\StreamDataSerializer.cs" />
+    <Compile Include="HastyClient\Model\StreamDataCommand.cs" />
+    <Compile Include="HastyClient\Protocol\StreamOffsetSerializer.cs" />
+    <Compile Include="HastyClient\Model\StreamOffset.cs" />
+    <Compile Include="HastyClient\Client\Command.cs" />
+    <Compile Include="HastyClient\Client\ConnectionState.cs" />
+    <Compile Include="HastyClient\Protocol\LoginSerializer.cs" />
+    <Compile Include="HastyClient\Model\LoginCommand.cs" />
+    <Compile Include="HastyClient\Model\PongCommand.cs" />
+    <Compile Include="HastyClient\Protocol\PongSerializer.cs" />
+    <Compile Include="HastyClient\Protocol\TimestampSerializer.cs" />
+    <Compile Include="HastyClient\Protocol\PingDeserializer.cs" />
+    <Compile Include="HastyClient\Model\TimestampDelta.cs" />
+    <Compile Include="HastyClient\Protocol\TimestampDeserializer.cs" />
+    <Compile Include="HastyClient\Protocol\PongDeserializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="HastyClient\Connection\" />

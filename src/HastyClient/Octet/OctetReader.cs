@@ -23,7 +23,7 @@ namespace Hasty.Client.Octet
 			this.log = log.CreateLog(typeof(OctetReader));
 			octets = data;
 			pos = 0;
-			log.Debug("OctetReader:{0}", data.Length);
+			// log.Debug("OctetReader:{0}", data.Length);
 		}
 
 		public ushort ReadUint16()

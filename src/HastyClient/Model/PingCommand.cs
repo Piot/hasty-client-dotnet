@@ -1,19 +1,19 @@
-﻿using System;
-namespace Hasty.Client.Model
+﻿namespace Hasty.Client.Model
 {
 	public class PingCommand
 	{
-		ulong ms;
-		public PingCommand(ulong ms)
+		Timestamp sentTime;
+
+		public PingCommand(Timestamp sentTime)
 		{
-			this.ms = ms;
+			this.sentTime = sentTime;
 		}
 
-		public ulong SentTime
+		public Timestamp SentTime
 		{
 			get
 			{
-				return ms;
+				return sentTime;
 			}
 		}
 	}
