@@ -19,8 +19,8 @@ namespace Hasty.Client.Api
 		ConnectionState state;
 
 		IStreamStorage streamStorage;
-		uint subscribingChannel;
-		Dictionary<uint, StreamHandler> streamHandlers = new Dictionary<uint, StreamHandler>();
+		List<uint> subscribingChannels = new List<uint>();
+		Dictionary<uint, StreamHandler> chunkHandlers = new Dictionary<uint, StreamHandler>();
 		CommandDefinitions definitions;
 
 		ILog log;
@@ -98,12 +98,17 @@ namespace Hasty.Client.Api
 		{
 			if (state == ConnectionState.LoggedIn)
 			{
+				log.Debug("OnLoggedIn - ignoring...");
 				return;
 			}
-			if (subscribingChannel != 0)
+			log.Debug("OnLoggedIn");
+			if (subscribingChannels.Count != 0)
 			{
 				var offset = (uint)0;
-				SendSubscribe(subscribingChannel, offset);
+				foreach (var subscribingChannel in subscribingChannels)
+				{
+					SendSubscribe(subscribingChannel, offset);
+				}
 			}
 			SetState(ConnectionState.LoggedIn);
 		}
@@ -127,8 +132,8 @@ namespace Hasty.Client.Api
 		{
 			var streamHandler = new StreamHandler(target, definitions, log);
 
-			streamHandlers.Add(streamId, streamHandler);
-			subscribingChannel = streamId;
+			chunkHandlers.Add(streamId, streamHandler);
+			subscribingChannels.Add(streamId);
 			var data = streamStorage.ReadAll(streamId);
 			InternalOnStreamData(streamId, data, 0, (uint)data.Length);
 
@@ -146,15 +151,25 @@ namespace Hasty.Client.Api
 
 		public void SendCommand(ushort streamId, Command command)
 		{
-			var channel = new ChannelID(streamId);
-			var payload = command.Stream.Close();
 			var isAtEndPosition = true;
 			var offset = new StreamOffset(0);
-			var streamData = new StreamDataCommand(channel, payload, isAtEndPosition, offset);
+			var channel = new ChannelID(streamId);
 
-			var stream = CreateStream(Commands.StreamData);
-			StreamDataSerializer.SerializeStreamData(stream, streamData);
-			SendPacket(stream);
+			var commandPayload = command.Stream.Close();
+
+			var commandStream = CreateStreamInternal();
+			commandStream.WriteLength((ushort)(commandPayload.Length + 1));
+			commandStream.WriteUint8(command.CommandId);
+			commandStream.WriteOctets(commandPayload);
+			var wrappedCommandPayload = commandStream.Close();
+
+			var streamData = new StreamDataCommand(channel, wrappedCommandPayload, isAtEndPosition, offset);
+
+			var streamDataStream = CreateStream(Commands.StreamData);
+
+			StreamDataSerializer.SerializeStreamData(streamDataStream, streamData);
+
+           	        SendPacket(streamDataStream);
 		}
 
 		private bool IsConnected
@@ -290,6 +305,7 @@ namespace Hasty.Client.Api
 		{
 			var streamId = streamReader.ReadUint32();
 			var streamOffset = streamReader.ReadUint32();
+			var lastInStream = streamReader.ReadUint8();
 			var payloadInPacket = streamReader.ReadLength();
 			var octetCount = streamReader.RemainingOctetCount;
 
@@ -328,7 +344,7 @@ namespace Hasty.Client.Api
 			// log.Debug("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
 
 			StreamHandler streamHandler;
-			var worked = streamHandlers.TryGetValue(streamId, out streamHandler);
+			var worked = chunkHandlers.TryGetValue(streamId, out streamHandler);
 
 			if (!worked)
 			{

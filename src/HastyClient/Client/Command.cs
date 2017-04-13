@@ -3,10 +3,12 @@
 	public class Command
 	{
 		IStreamWriter writer;
+		byte commandId;
+
 		internal Command(IStreamWriter writer, byte commandId)
 		{
 			this.writer = writer;
-			writer.WriteUint8(commandId);
+			this.commandId = commandId;
 		}
 
 		public IStreamWriter Stream
@@ -14,6 +16,14 @@
 			get
 			{
 				return writer;
+			}
+		}
+
+		public byte CommandId
+		{
+			get
+			{
+				return commandId;
 			}
 		}
 	}

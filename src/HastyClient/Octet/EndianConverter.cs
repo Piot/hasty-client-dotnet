@@ -64,7 +64,7 @@ namespace Hasty.Client.Shared
 		{
 			ushort v = 0;
 
-			v = (ushort)(octets[0] << 8 + octets[1]);
+			v = (ushort)((octets[0] << 8) + octets[1]);
 
 			return v;
 		}

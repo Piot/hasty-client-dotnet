@@ -30,6 +30,7 @@ namespace TestProgram
 		{
 			log.Debug("Looping...");
 			Thread.Sleep(1000);
+			program.SendText("Hello!");
 		}
 	}
 }

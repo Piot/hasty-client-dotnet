@@ -1,4 +1,5 @@
 ﻿using System;
+using Hasty.Client.Debug;
 
 namespace Hasty.Client.Packet
 {
@@ -40,7 +41,8 @@ namespace Hasty.Client.Packet
 
 		public override string ToString()
 		{
-			return string.Format("[Packet: Command={0:X}, Length={1}]", Command, Length);
+			var hexString = OctetBufferDebug.OctetsToHex(data);
+			return string.Format("[Packet: Command={0:X}, Length={1}, Octets={2}]", Command, Length, hexString);
 		}
 	}
 }

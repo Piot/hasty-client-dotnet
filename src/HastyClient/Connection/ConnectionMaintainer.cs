@@ -120,6 +120,7 @@ namespace Hasty.Client.Connection
 		private void WritePacket(HastyPacket packet)
 		{
 			log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
+
 			connection.Write(new byte[] { (byte)packet.Length });
 			connection.Write(packet.Octets);
 		}

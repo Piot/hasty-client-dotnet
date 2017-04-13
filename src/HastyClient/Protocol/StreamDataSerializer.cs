@@ -9,6 +9,7 @@ namespace Hasty.Client.Serializer
 			ChannelIdSerializer.SerializeChannelId(stream, command.Channel);
 			StreamOffsetSerializer.SerializeStreamOffset(stream, command.Offset);
 			stream.WriteBool(command.IsAtEndPosition);
+			stream.WriteLength((ushort) command.Payload.Length);
 			stream.WriteOctets(command.Payload);
 		}
 	}

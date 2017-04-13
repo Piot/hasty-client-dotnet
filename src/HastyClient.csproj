@@ -112,6 +112,7 @@
     <Folder Include="HastyClient\PacketHandler\" />
     <Folder Include="HastyClient\Storage\" />
     <Folder Include="HastyClient\Log\" />
+    <Folder Include="HastyClient\Chunk\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

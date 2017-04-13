@@ -95,7 +95,7 @@ namespace Hasty.Client.Connection
 			var logBuf = new byte[receivedOctets];
 
 			Buffer.BlockCopy(buf, 0, logBuf, 0, receivedOctets);
-			log.Debug("Received:'{0}'", OctetBufferDebug.OctetsToHex(logBuf));
+			log.Debug("Transport Received:'{0}'", OctetBufferDebug.OctetsToHex(logBuf));
 		}
 
 		internal void Disconnect(string reason)
