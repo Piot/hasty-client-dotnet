@@ -19,7 +19,7 @@ namespace Hasty.Client.Connection
 			IPAddress hostAddress = hostInfo.AddressList[0];
 
 			var hostEndPoint = new IPEndPoint(hostAddress, serverUrl.Port);
-			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			var socket = new Socket(hostEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			socket.NoDelay = true;
 			try
 			{
