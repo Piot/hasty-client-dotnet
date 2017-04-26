@@ -34,8 +34,9 @@ namespace Hasty.Client
 
 		public void WriteString(string str)
 		{
-			WriteLength((ushort)str.Length);
 			var buf = System.Text.Encoding.UTF8.GetBytes(str);
+
+			WriteLength((ushort)buf.Length);
 
 			for (var i = 0; i < buf.Length; ++i)
 			{
