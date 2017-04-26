@@ -32,12 +32,14 @@ namespace TestProgram
 		public void setcolor_1(IStreamReader reader)
 		{
 			var color = reader.ReadUint16();
+
 			log.Info("*** Set Color {0}", color);
 		}
 
 		internal void SendText(string text)
 		{
 			var cmd = client.CreateCommand(0xaa);
+
 			counter++;
 			cmd.Stream.WriteUint16(counter);
 			client.SendCommand(0x01, cmd);

@@ -7,6 +7,7 @@ namespace Hasty.Client.Serializer
 		public static void DeserializeTimestamp(IStreamReader stream, out Timestamp remoteTime)
 		{
 			var raw = stream.ReadUint64();
+
 			remoteTime = Timestamp.FromRaw(raw);
 		}
 	}

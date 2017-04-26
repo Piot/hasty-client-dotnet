@@ -22,7 +22,5 @@ namespace Hasty.Client.Model
 
 			private set;
 		}
-
-
 	}
 }

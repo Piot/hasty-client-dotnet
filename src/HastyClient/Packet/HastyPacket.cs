@@ -42,6 +42,7 @@ namespace Hasty.Client.Packet
 		public override string ToString()
 		{
 			var hexString = OctetBufferDebug.OctetsToHex(data);
+
 			return string.Format("[Packet: Command={0:X}, Length={1}, Octets={2}]", Command, Length, hexString);
 		}
 	}

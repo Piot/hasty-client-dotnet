@@ -8,6 +8,7 @@ namespace Hasty.Client.Serializer
 		public static bool DeserializePong(IStreamReader stream, out PongCommand pong)
 		{
 			Timestamp remoteTime;
+
 			TimestampDeserializer.DeserializeTimestamp(stream, out remoteTime);
 
 			Timestamp echoedTime;

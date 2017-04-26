@@ -6,7 +6,6 @@
 
 		void WriteLength(ushort length);
 
-
 		void WriteBool(bool v);
 	}
 }

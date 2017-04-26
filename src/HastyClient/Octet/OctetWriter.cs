@@ -55,7 +55,5 @@ namespace Hasty.Client.Octet
 
 			return bufferToReturn;
 		}
-
-
 	}
 }
