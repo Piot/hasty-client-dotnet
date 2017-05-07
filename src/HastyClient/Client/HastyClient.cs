@@ -27,8 +27,9 @@ namespace Hasty.Client.Api
 		string username;
 		string password;
 		string realm;
+		object defaultTarget;
 
-		public HastyClient(Uri serverUrl, string realm, string username, string password, CommandDefinitions definitions, string baseDir, ILog log)
+		public HastyClient(Uri serverUrl, string realm, string username, string password, CommandDefinitions definitions, string baseDir, object target, ILog log)
 		{
 			this.username = username;
 			this.password = password;
@@ -37,6 +38,7 @@ namespace Hasty.Client.Api
 			var storage = new StreamStorage(baseDir, log);
 			streamStorage = storage;
 			this.definitions = definitions;
+			defaultTarget = target;
 
 			SetStatus(ConnectionStatus.Idle);
 			SetState(ConnectionState.Establishing);
@@ -46,6 +48,19 @@ namespace Hasty.Client.Api
 			connectionMaintainer.OnConnecting += OnConnecting;
 			connectionMaintainer.OnConnected += OnMaintainerConnected;
 			connectionMaintainer.Start();
+		}
+
+		public void Dispose()
+		{
+			IsFocus = false;
+		}
+
+		public bool IsFocus
+		{
+			set
+			{
+				connectionMaintainer.IsFocus = value;
+			}
 		}
 
 		void OnDisconnect()
@@ -91,14 +106,17 @@ namespace Hasty.Client.Api
 			SendLogin(username, password);
 		}
 
-		void OnLoggedIn()
+		void OnLoggedIn(IStreamReader stream)
 		{
+			var userChannelID = stream.ReadUint32();
+
 			if (state == ConnectionState.LoggedIn)
 			{
 				log.Debug("OnLoggedIn - ignoring...");
 				return;
 			}
 			log.Debug("OnLoggedIn");
+			Subscribe(userChannelID, defaultTarget);
 
 			if (subscribingChannels.Count != 0)
 			{
@@ -129,8 +147,16 @@ namespace Hasty.Client.Api
 
 		public void Subscribe(uint streamId, object target)
 		{
-			var streamHandler = new StreamHandler(target, definitions, log);
+			StreamHandler existingHandler;
+			var alreadyInThere = chunkHandlers.TryGetValue(streamId, out existingHandler);
 
+			if (alreadyInThere)
+			{
+				log.Warning(string.Format("You are already subscribed to {0}. Ignoring for now.", streamId));
+				return;
+			}
+
+			var streamHandler = new StreamHandler(target, definitions, log);
 			chunkHandlers.Add(streamId, streamHandler);
 			subscribingChannels.Add(streamId);
 			var data = streamStorage.ReadAll(streamId);
@@ -341,16 +367,17 @@ namespace Hasty.Client.Api
 			InternalOnStreamData(streamId, streamDataOctets, startWritePosition, octetsToWrite);
 		}
 
-		void InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
+		void
+		InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
 		{
-			// log.Debug("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
-
+			log.Warning("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
+			log.Warning("InternalOnStreamData channel:{0} octets:{1}", streamId, Debug.OctetBufferDebug.OctetsToHex(octets));
 			StreamHandler streamHandler;
 			var worked = chunkHandlers.TryGetValue(streamId, out streamHandler);
 
 			if (!worked)
 			{
-				log.Warning("Didn't work");
+				log.Warning("We don't have any chunk handlers for stream {0}", streamId);
 				return;
 			}
 			var buf = new byte[octetsToWrite];
@@ -385,7 +412,7 @@ namespace Hasty.Client.Api
 			{
 			case 1:
 				log.Debug("Login was ok");
-				OnLoggedIn();
+				OnLoggedIn(stream);
 				break;
 			default:
 				log.Debug("Login failed");

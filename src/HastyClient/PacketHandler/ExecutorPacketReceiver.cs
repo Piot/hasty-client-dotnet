@@ -24,7 +24,7 @@ namespace Hasty.Client.PacketHandler
 
 			if (commandTarget == null)
 			{
-				var e = new Exception("Couldn't find it");
+				var e = new Exception(string.Format("Couldn't find command {0}", packet.Command));
 				log.Exception(e);
 				throw e;
 			}

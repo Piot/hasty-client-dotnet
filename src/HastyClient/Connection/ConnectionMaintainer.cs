@@ -27,6 +27,7 @@ namespace Hasty.Client.Connection
 		public Action OnConnected;
 		ILog log;
 		Timestamp lastReceivedPacketTime;
+		bool shouldRetainConnection = true;
 
 		public ConnectionMaintainer(Uri serverUrl, string realm, ILog log)
 		{
@@ -41,6 +42,29 @@ namespace Hasty.Client.Connection
 		public void Start()
 		{
 			Connect();
+		}
+
+		public bool IsFocus
+		{
+			set
+			{
+				if (value)
+				{
+					if (!shouldRetainConnection)
+					{
+						shouldRetainConnection = true;
+						Start();
+					}
+				}
+				else
+				{
+					if (shouldRetainConnection)
+					{
+						shouldRetainConnection = false;
+						Disconnect("Out of focus");
+					}
+				}
+			}
 		}
 
 		internal void SwitchToTemporaryHost(Uri url)
@@ -116,7 +140,6 @@ namespace Hasty.Client.Connection
 			return packet;
 		}
 
-
 		private void WritePacket(HastyPacket packet)
 		{
 			log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
@@ -160,15 +183,27 @@ namespace Hasty.Client.Connection
 
 		private void ConnectionDisconnected()
 		{
-			log.Warning("Connection is disconnected");
-			pingTimer.Stop();
-			pingTimer = null;
-			connection.Close();
-			connection = null;
+			log.Warning("Connection is disconnected. Stopping all timers");
+
+			if (pingTimer != null)
+			{
+				pingTimer.Stop();
+				pingTimer = null;
+			}
+
+			if (connection != null)
+			{
+				connection.Close();
+				connection = null;
+			}
 			OnDisconnect();
 			// Go back to main url if we get disconnected
 			serverUrl = mainUrl;
-			ConnectAgainLater();
+
+			if (shouldRetainConnection)
+			{
+				ConnectAgainLater();
+			}
 		}
 
 		private void ConnectAgainLater()
@@ -193,7 +228,13 @@ namespace Hasty.Client.Connection
 		public void Disconnect(string reason)
 		{
 			log.Debug("Forced disconnect. Reason '{0}'", reason);
-			connection.Close();
+
+			if (connection == null)
+			{
+				ConnectionDisconnected();
+				return;
+			}
+			connection.Disconnect(reason);
 		}
 	}
 }

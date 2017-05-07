@@ -8,7 +8,7 @@
 		public PongCommand(Timestamp timeSent, Timestamp echoedTime)
 		{
 			this.echoedTime = echoedTime;
-			this.remoteTimeSent = timeSent;
+			remoteTimeSent = timeSent;
 		}
 
 		public Timestamp EchoedTime

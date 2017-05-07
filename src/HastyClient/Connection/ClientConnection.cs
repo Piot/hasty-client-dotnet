@@ -32,8 +32,11 @@ namespace Hasty.Client.Connection
 
 		public void Close()
 		{
-			stream.Dispose();
-			stream = null;
+			if (stream != null)
+			{
+				stream.Dispose();
+				stream = null;
+			}
 		}
 
 		void continueReceiving()
@@ -100,6 +103,7 @@ namespace Hasty.Client.Connection
 
 		internal void Disconnect(string reason)
 		{
+			Close();
 			Disconnected(reason);
 		}
 	}
