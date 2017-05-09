@@ -140,12 +140,29 @@ namespace Hasty.Client.Connection
 			return packet;
 		}
 
-		private void WritePacket(HastyPacket packet)
+		private IStreamWriter createStreamWriter()
 		{
+			var octetWriter = new OctetWriter();
+			var streamWriter = new StreamWriter(octetWriter);
+
+			return streamWriter;
+		}
+
+		void WritePacket(HastyPacket packet)
+		{
+			if (connection == null)
+			{
+				log.Warning("CAN NOT SEND. NO CONNECTION!");
+				return;
+			}
+
 			log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
 
-			connection.Write(new byte[] { (byte)packet.Length });
-			connection.Write(packet.Octets);
+			var stream = createStreamWriter();
+			stream.WriteLength((ushort)packet.Length);
+			stream.WriteOctets(packet.Octets);
+			var octets = stream.Close();
+			connection.Write(octets);
 		}
 
 		private void OctetQueueChanged(OctetQueue queue)

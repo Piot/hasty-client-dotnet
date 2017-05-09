@@ -18,17 +18,16 @@ namespace Hasty.Client
 
 		public void WriteLength(ushort len)
 		{
-			var msb = (byte)(len % 256U);
-
-			if (msb > 127U)
+			if (len > 127)
 			{
+				var msb = (byte)(len % 256U);
 				var lsb = (byte)(len / 256U);
 				octetReader.WriteUint8((byte)((lsb & 0x7f) | 0x80));
 				octetReader.WriteUint8(msb);
 			}
 			else
 			{
-				octetReader.WriteUint8(msb);
+				octetReader.WriteUint8((byte)(len & 0x7f));
 			}
 		}
 

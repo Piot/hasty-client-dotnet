@@ -27,8 +27,9 @@ namespace Hasty.Client
 
 			if (len > 127U)
 			{
-				ushort second = (ushort)(ReadUint8());
-				var totalLength = (len & 0x7f) * 0x100 + second;
+				var lsb = (byte)(len & 0x7f);
+				var msb = (ushort)(ReadUint8());
+				var totalLength = lsb * 0x100 + msb;
 				len = (ushort)totalLength;
 			}
 			return len;
