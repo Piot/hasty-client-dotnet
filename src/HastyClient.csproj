@@ -98,6 +98,8 @@
     <Compile Include="HastyClient\Model\TimestampDelta.cs" />
     <Compile Include="HastyClient\Protocol\TimestampDeserializer.cs" />
     <Compile Include="HastyClient\Protocol\PongDeserializer.cs" />
+    <Compile Include="HastyClient\Storage\IPreferences.cs" />
+    <Compile Include="HastyClient\Storage\Preferences.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="HastyClient\Connection\" />

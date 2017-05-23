@@ -39,6 +39,22 @@ namespace Hasty.Client.Connection
 			this.realm = realm;
 		}
 
+		public string Realm
+		{
+			get
+			{
+				return realm;
+			}
+		}
+
+		public string Endpoint
+		{
+			get
+			{
+				return serverUrl.ToString();
+			}
+		}
+
 		public void Start()
 		{
 			Connect();

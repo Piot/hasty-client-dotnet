@@ -19,6 +19,7 @@ namespace Hasty.Client.Api
 		ConnectionState state;
 
 		IStreamStorage streamStorage;
+		IPreferences preferences;
 		List<uint> subscribingChannels = new List<uint>();
 		Dictionary<uint, StreamHandler> chunkHandlers = new Dictionary<uint, StreamHandler>();
 		CommandDefinitions definitions;
@@ -36,6 +37,7 @@ namespace Hasty.Client.Api
 			this.realm = realm;
 			this.log = log.CreateLog(typeof(HastyClient));
 			var storage = new StreamStorage(baseDir, log);
+			preferences = new Preferences(baseDir, log);
 			streamStorage = storage;
 			this.definitions = definitions;
 			defaultTarget = target;
@@ -47,6 +49,16 @@ namespace Hasty.Client.Api
 			connectionMaintainer.OnDisconnect += OnDisconnect;
 			connectionMaintainer.OnConnecting += OnConnecting;
 			connectionMaintainer.OnConnected += OnMaintainerConnected;
+
+			ulong userAssignedChannelId;
+
+			var foundUserAssignedChannel = preferences.GetUserChannel(serverUrl.ToString(), realm, out userAssignedChannelId);
+
+			if (foundUserAssignedChannel)
+			{
+				Subscribe((uint)userAssignedChannelId, target);
+			}
+
 			connectionMaintainer.Start();
 		}
 
@@ -117,12 +129,13 @@ namespace Hasty.Client.Api
 			}
 			log.Debug("OnLoggedIn");
 			Subscribe(userChannelID, defaultTarget);
+			preferences.SetUserChannel(connectionMaintainer.Endpoint, connectionMaintainer.Realm, userChannelID);
 
 			if (subscribingChannels.Count != 0)
 			{
-				var offset = (uint)0;
 				foreach (var subscribingChannel in subscribingChannels)
 				{
+					var offset = (uint) streamStorage.FileSize(subscribingChannel);
 					SendSubscribe(subscribingChannel, offset);
 				}
 			}
