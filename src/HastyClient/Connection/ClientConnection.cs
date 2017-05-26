@@ -15,8 +15,8 @@ namespace Hasty.Client.Connection
 		public Action<OctetQueue> OnOctetQueueChanged;
 
 		private byte[] receiveBuffer = new byte[8142];
-		const int bufSize = 8192;
-		OctetQueue octetQueue = new OctetQueue(bufSize);
+		const int octetQueueMaxBufferSize = 1 * 1024 * 1024;
+		OctetQueue octetQueue = new OctetQueue(octetQueueMaxBufferSize);
 		ILog log;
 
 		public ClientConnection(Stream stream, ILog log)
@@ -74,7 +74,7 @@ namespace Hasty.Client.Connection
 				Disconnected("Receive");
 				return;
 			}
-			LogOctets(receiveBuffer, receivedOctets);
+			// LogOctets(receiveBuffer, receivedOctets);
 			octetQueue.Enqueue(receiveBuffer, 0, receivedOctets);
 			OnOctetQueueChanged(octetQueue);
 			continueReceiving();

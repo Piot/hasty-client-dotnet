@@ -13,7 +13,6 @@ namespace Hasty.Client.Api
 	public class HastyClient
 	{
 		ConnectionMaintainer connectionMaintainer;
-		ExecutorPacketReceiver receiver;
 
 		ConnectionStatus status;
 		ConnectionState state;
@@ -72,6 +71,28 @@ namespace Hasty.Client.Api
 			set
 			{
 				connectionMaintainer.IsFocus = value;
+			}
+		}
+		private ulong ms()
+		{
+			var t = DateTime.UtcNow - new DateTime(1970, 1, 1);
+			return  (ulong)t.TotalMilliseconds;
+		}
+
+		public void Update()
+		{
+			var timestampStart = ms();
+			var copy = new Dictionary<uint, StreamHandler>(chunkHandlers);
+
+			foreach (var chunkHandler in copy)
+			{
+				chunkHandler.Value.Update();
+			}
+
+			var totalTime = ms() - timestampStart;
+			if (totalTime > 150)
+			{
+				log.Warning("{0} FINISHED PROCESS", totalTime);
 			}
 		}
 
@@ -133,7 +154,8 @@ namespace Hasty.Client.Api
 
 			if (subscribingChannels.Count != 0)
 			{
-				foreach (var subscribingChannel in subscribingChannels)
+				var copy = new List<uint>(subscribingChannels);
+				foreach (var subscribingChannel in copy)
 				{
 					var offset = (uint) streamStorage.FileSize(subscribingChannel);
 					SendSubscribe(subscribingChannel, offset);
@@ -165,7 +187,7 @@ namespace Hasty.Client.Api
 
 			if (alreadyInThere)
 			{
-				log.Warning(string.Format("You are already subscribed to {0}. Ignoring for now.", streamId));
+				// log.Warning(string.Format("You are already subscribed to {0}. Ignoring for now.", streamId));
 				return;
 			}
 
@@ -222,7 +244,7 @@ namespace Hasty.Client.Api
 
 		void SendSubscribe(uint streamId, uint offset)
 		{
-			log.Debug("SendSubscribe! {0} {1}", streamId, offset);
+			// log.Debug("SendSubscribe! {0} {1}", streamId, offset);
 			var stream = CreateStream(Commands.SubscribeStream);
 			stream.WriteUint8(1);
 			stream.WriteUint32(streamId);
@@ -276,21 +298,7 @@ namespace Hasty.Client.Api
 
 		private void OnPacketRead(HastyPacket packet)
 		{
-			// log.Debug("PacketRead:{0}", packet);
-
-			if (packet.Command >= 128)
-			{
-				InternalPacket(packet);
-			}
-			else
-			{
-				ApplicationSpecificPacket(packet);
-			}
-		}
-
-		void ApplicationSpecificPacket(HastyPacket packet)
-		{
-			receiver.ReceivePacket(packet);
+			InternalPacket(packet);
 		}
 
 		void InternalPacket(HastyPacket packet)
@@ -355,7 +363,7 @@ namespace Hasty.Client.Api
 				var e = new Exception(string.Format("ERROR: {0} {1}", octetCount, payloadInPacket));
 				log.Exception(e);
 			}
-			log.Debug("Stream id:{0:X} offset:{1} octetCount:{2}", streamId, streamOffset, octetCount);
+			// log.Debug("Stream id:{0:X} offset:{1} octetCount:{2}", streamId, streamOffset, octetCount);
 
 			var alreadyWrittenOctetCount = streamStorage.FileSize(streamId);
 			var streamDataOctets = streamReader.ReadOctets(octetCount);
@@ -375,7 +383,7 @@ namespace Hasty.Client.Api
 			}
 			var startWritePosition = (uint)startIndexInStreamDataOctets;
 			var octetsToWrite = (uint)(streamDataOctets.Length - startIndexInStreamDataOctets);
-			log.Debug("Streamx id:{0:X} startIndexInData:{1} octetsToWrite:{2}", streamId, startIndexInStreamDataOctets, octetsToWrite);
+			// log.Debug("Streamx id:{0:X} startIndexInData:{1} octetsToWrite:{2}", streamId, startIndexInStreamDataOctets, octetsToWrite);
 			streamStorage.Append(streamId, streamDataOctets, startWritePosition, octetsToWrite);
 			InternalOnStreamData(streamId, streamDataOctets, startWritePosition, octetsToWrite);
 		}
@@ -383,8 +391,8 @@ namespace Hasty.Client.Api
 		void
 		InternalOnStreamData(uint streamId, byte[] octets, uint streamOffset, uint octetsToWrite)
 		{
-			log.Warning("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
-			log.Warning("InternalOnStreamData channel:{0} octets:{1}", streamId, Debug.OctetBufferDebug.OctetsToHex(octets));
+			//log.Warning("InternalOnStreamData id:{0:X} streamOffset {1} octetsToWrite {2}", streamId, streamOffset, octetsToWrite);
+			// log.Warning("InternalOnStreamData channel:{0} octets:{1}", streamId, Debug.OctetBufferDebug.OctetsToHex(octets));
 			StreamHandler streamHandler;
 			var worked = chunkHandlers.TryGetValue(streamId, out streamHandler);
 

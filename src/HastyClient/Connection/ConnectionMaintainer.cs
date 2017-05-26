@@ -172,7 +172,7 @@ namespace Hasty.Client.Connection
 				return;
 			}
 
-			log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
+			// log.Debug("Sending packet:{0} {1}", packet, OctetBufferDebug.OctetsToHex(packet.Octets));
 
 			var stream = createStreamWriter();
 			stream.WriteLength((ushort)packet.Length);

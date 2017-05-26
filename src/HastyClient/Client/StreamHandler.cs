@@ -20,6 +20,11 @@ namespace Hasty.Client.Api
 			receiveStream = new ReceiveStream(receiver, log);
 		}
 
+		public void Update()
+		{
+			receiver.Update();
+		}
+
 		internal void Receive(byte[] octets)
 		{
 			receiveStream.Add(octets);

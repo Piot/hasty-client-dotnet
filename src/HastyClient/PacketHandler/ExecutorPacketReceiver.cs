@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hasty.Client.Api;
 using Hasty.Client.Command;
 using Hasty.Client.Octet;
@@ -10,6 +11,7 @@ namespace Hasty.Client.PacketHandler
 	{
 		ICommandTargetCreator targetCreator;
 		ILog log;
+		List<HastyPacket> packetsToProcess = new List<HastyPacket>();
 
 		public ExecutorPacketReceiver(ICommandTargetCreator targetCreator, ILog log)
 		{
@@ -19,6 +21,31 @@ namespace Hasty.Client.PacketHandler
 		}
 
 		public void ReceivePacket(HastyPacket packet)
+		{
+			lock (packetsToProcess)
+			{
+				packetsToProcess.Add(packet);
+			}
+		}
+
+		public void Update()
+		{
+			ProcessPackets();
+		}
+
+		private void ProcessPackets()
+		{
+			lock (packetsToProcess)
+			{
+				foreach (var packet in packetsToProcess)
+				{
+					ProcessPacket(packet);
+				}
+				packetsToProcess.Clear();
+			}
+		}
+
+		private void ProcessPacket(HastyPacket packet)
 		{
 			var commandTarget = targetCreator.FindCommandTarget(packet.Command, 1);
 
@@ -31,7 +58,6 @@ namespace Hasty.Client.PacketHandler
 			var octetReader = new OctetReader(packet.Octets, log);
 			octetReader.ReadUint8();
 			var stream = new StreamReader(octetReader, log);
-
 			commandTarget.Execute(stream);
 		}
 	}
