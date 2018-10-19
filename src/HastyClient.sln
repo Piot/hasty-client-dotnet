@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HastyClient", "HastyClient.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProgram", "TestProgram\TestProgram.csproj", "{C5AD108A-52AB-4327-8A30-91D267D112CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{ABEF7A4F-CEBE-40DC-B7C3-BF0C5F997D1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -19,5 +21,9 @@ Global
 		{C5AD108A-52AB-4327-8A30-91D267D112CC}.Debug|x86.Build.0 = Debug|x86
 		{C5AD108A-52AB-4327-8A30-91D267D112CC}.Release|x86.ActiveCfg = Release|x86
 		{C5AD108A-52AB-4327-8A30-91D267D112CC}.Release|x86.Build.0 = Release|x86
+		{ABEF7A4F-CEBE-40DC-B7C3-BF0C5F997D1E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ABEF7A4F-CEBE-40DC-B7C3-BF0C5F997D1E}.Debug|x86.Build.0 = Debug|Any CPU
+		{ABEF7A4F-CEBE-40DC-B7C3-BF0C5F997D1E}.Release|x86.ActiveCfg = Release|Any CPU
+		{ABEF7A4F-CEBE-40DC-B7C3-BF0C5F997D1E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

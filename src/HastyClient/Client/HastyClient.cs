@@ -76,7 +76,8 @@ namespace Hasty.Client.Api
 		private ulong ms()
 		{
 			var t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-			return  (ulong)t.TotalMilliseconds;
+
+			return (ulong)t.TotalMilliseconds;
 		}
 
 		public void Update()
@@ -90,6 +91,7 @@ namespace Hasty.Client.Api
 			}
 
 			var totalTime = ms() - timestampStart;
+
 			if (totalTime > 150)
 			{
 				log.Warning("{0} FINISHED PROCESS", totalTime);
@@ -246,6 +248,7 @@ namespace Hasty.Client.Api
 		{
 			// log.Debug("SendSubscribe! {0} {1}", streamId, offset);
 			var stream = CreateStream(Commands.SubscribeStream);
+
 			stream.WriteUint8(1);
 			stream.WriteUint32(streamId);
 			const byte qos = 1;
